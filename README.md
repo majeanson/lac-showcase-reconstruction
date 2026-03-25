@@ -54,10 +54,10 @@ No environment variables required — fully static, feature data embedded at bui
 
 ## The toolchain
 
-| package | what it is | link |
-|---|---|---|
-| `@majeanson/lac` | CLI — scaffold features, fill with AI, inspect lineage. Runs via `npx`. | [npm →](https://www.npmjs.com/package/@majeanson/lac) |
-| `lac-lens` | VS Code extension — CodeLens annotations, hover cards, sidebar explorer. | [marketplace →](https://marketplace.visualstudio.com/items?itemName=majeanson.lac-lens) |
-| `lac-mcp` | MCP server — exposes your feature workspace to Claude, Cursor, any MCP host. | bundled with CLI |
-| `lifeascode` | Web app — browse features, visualise lineage trees, timeline of decisions. | [live demo →](https://lifeascode-ruddy.vercel.app/) |
-| `feature-schema` | Canonical schema — single Zod source of truth across CLI, LSP, MCP, web app. | bundled |
+| package          | what it is                                                                   | link                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `@majeanson/lac` | CLI — scaffold features, fill with AI, inspect lineage. Runs via `npx`.      | [npm →](https://www.npmjs.com/package/@majeanson/lac)                                   |
+| `lac-lens`       | VS Code extension — CodeLens annotations, hover cards, sidebar explorer.     | [marketplace →](https://marketplace.visualstudio.com/items?itemName=majeanson.lac-lens) |
+| `lac-mcp`        | MCP server — exposes your feature workspace to Claude, Cursor, any MCP host. | bundled with CLI                                                                        |
+| `lifeascode`     | Web app — browse features, visualise lineage trees, timeline of decisions.   | [live demo →](https://lifeascode-ruddy.vercel.app/)                                     |
+| `feature-schema` | Canonical schema — single Zod source of truth across CLI, LSP, MCP, web app. | bundled                                                                                 |
