@@ -1,0 +1,23 @@
+{
+  "featureKey": "feat-2026-008",
+  "title": "lac-lens — VS Code Extension",
+  "status": "frozen",
+  "problem": "Feature provenance is most useful while reading or editing code — without editor integration, the feature.json is a file the developer must remember to open manually.",
+  "schemaVersion": 1,
+  "analysis": "VS Code extension surfacing feature provenance via CodeLens, hover tooltips, a sidebar tree view, a rich webview panel, and a status bar indicator. Works standalone (filesystem walking) or enhanced (lac-lsp over stdio), auto-detecting which mode is available.",
+  "implementation": "Activated in extension.ts, which registers CodeLensProvider, HoverProvider, and the Explorer tree. FeatureWalker.ts and FeatureCache.ts handle discovery without the LSP; LacLspClient.ts takes over for richer diagnostics when available. FeaturePanel.ts renders a webview as static HTML. Built with esbuild to a single out/extension.js.",
+  "decisions": [
+    {"decision": "Two-mode architecture: standalone filesystem + optional LSP","rationale": "Standalone mode works out of the box; LSP mode is an upgrade for power users who want diagnostics — requiring LSP adds too much friction.","alternativesConsidered": ["LSP required — too much setup friction","Always filesystem — misses diagnostics and cross-file intelligence"],"date": "2026-03-21"},
+    {"decision": "Webview panel as static HTML, not a React SPA","rationale": "Simpler bundle and faster startup — the panel is read-heavy and doesn't need full React reactivity.","alternativesConsidered": ["React in webview — more interactive but heavier build pipeline"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "Standalone mode re-indexes features on every activation — slow in large repos",
+    "Webview panel is one-way HTML — rich interactions require page reload",
+    "Auto-detection of lac-lsp binary is silent — users don't know which mode they're in"
+  ],
+  "successCriteria": "Installing the extension and opening a repo with feature.json files shows CodeLens annotations, a populated sidebar tree, and working hover tooltips with zero configuration.",
+  "tags": ["vscode","extension","codelens","lsp","editor"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "Editor integration is a first-class surface of the LAC ecosystem alongside the CLI and web app."},
+  "domain": "editor-integration",
+  "priority": 3
+}

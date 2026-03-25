@@ -1,0 +1,19 @@
+{
+  "featureKey": "feat-2026-006",
+  "title": "LAC Ecosystem Overview",
+  "status": "frozen",
+  "problem": "Visitors who understand life-as-code still don't know what tools exist, how they relate, or which one to reach for.",
+  "schemaVersion": 1,
+  "analysis": "The LAC ecosystem spans three deployment surfaces — CLI (npm), VS Code extension (Marketplace), and web app (Vercel) — backed by internal packages for schema, LSP, MCP, and Claude integration. This overview is the index node; child features fill in the per-package territory.",
+  "decisions": [
+    {"decision": "One child feature per package/app, this feature as their shared parent","rationale": "Each package has its own decisions and tradeoffs deserving independent documentation — this overview explains the shape while children fill in the detail.","alternativesConsidered": ["One long feature with all packages — loses per-package context","No overview, just individual package features — no entry point for the full map"],"date": "2026-03-21"},
+    {"decision": "Ecosystem overview frozen once all 7 package children are complete and rendering in the tree","rationale": "All package features (007-013) are filled, frozen, and visible as an indented sub-tree with a thread-toggle to collapse them in one click.","alternativesConsidered": [],"date": "2026-03-21"}
+  ],
+  "tags": ["ecosystem","packages","overview","lac","index"],
+  "lineage": {"parent": "feat-2026-004","children": ["feat-2026-007","feat-2026-008","feat-2026-009","feat-2026-010","feat-2026-011","feat-2026-012","feat-2026-013"],"spawnReason": "The what-is-LAC explainer introduces the concept; this is the natural next step — here's what you can install."},
+  "knownLimitations": ["Overview becomes stale when a new package is added without a matching child feature"],
+  "successCriteria": "The ecosystem overview renders as parent of all package features, and a visitor reading top-to-bottom can follow the LAC concept → ecosystem map → individual package deep-dives.",
+  "domain": "documentation",
+  "implementation": "No code — content-only feature. Renders as a feature card at depth 2; its 7 child features appear indented at depth 3. The thread-toggle collapses all 7 package cards in one click.",
+  "priority": 1
+}

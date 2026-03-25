@@ -1,0 +1,108 @@
+{
+  "featureKey": "feat-2026-005",
+  "title": "Lineage Tree and Story Focus",
+  "status": "frozen",
+  "problem": "Visitors have no way to understand parent/child relationships visually or skip sub-stories they don't care about — the app forces linear scroll through everything.",
+  "schemaVersion": 1,
+  "analysis": "Parent features act as chapter headings with collapse affordances that hide entire sub-trees in one click. Collapse state lives in React component state (not URL) so it resets on reload — intentional, since the default experience should show everything. A collapsed parent shows a child-count badge so readers know what they're skipping.",
+  "decisions": [
+    {
+      "decision": "Collapse entire sub-tree when a parent is collapsed, not just direct children",
+      "rationale": "A reader skipping a story wants to skip the whole thread — collapsing only direct children forces repeated clicks and leaves grandchildren visible.",
+      "alternativesConsidered": [
+        "Collapse one level at a time — tedious for deep trees",
+        "Hide button per card — no sense of the thread being skipped"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Ephemeral collapse state (component state, not URL or localStorage)",
+      "rationale": "The default experience should always show the full story — persisting collapsed state would hide content from returning visitors without them realising it.",
+      "alternativesConsidered": [
+        "localStorage — risks permanently hiding content",
+        "URL params — shareable but adds complexity for a simple reading preference"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Child-count badge on collapsed parents",
+      "rationale": "Readers need to know what they're skipping — a badge like '▸ 3' makes the collapse feel intentional rather than like missing content.",
+      "alternativesConsidered": [
+        "No badge — ambiguous, reader may think tree is shallow",
+        "Expand/collapse all global toggle — too broad for v1"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Collapsed state hides child cards only — the parent card always shows its full content (revised by feat-2026-016)",
+      "rationale": "Originally the card minimised to title-only when collapsed, but feat-2026-016 removed this because it confused readers who expected to see what they were skipping.",
+      "alternativesConsidered": [
+        "Hide problem/tags/spawn-reason on collapsed parent — made collapsed cards feel like broken stubs"
+      ],
+      "date": "2026-03-21"
+    }
+  ],
+  "tags": [
+    "lineage",
+    "tree",
+    "collapse",
+    "ux",
+    "navigation"
+  ],
+  "lineage": {
+    "parent": "feat-2026-003",
+    "children": [
+      "feat-2026-014",
+      "feat-2026-021"
+    ],
+    "spawnReason": "Design system established visual tokens; collapse/expand and lineage connectors are the natural next layer."
+  },
+  "knownLimitations": [
+    "Collapse state resets on reload — carefully curated views are lost on refresh",
+    "No keyboard shortcut to collapse/expand a sub-tree",
+    "Child-count badge counts only direct children, not the full recursive depth"
+  ],
+  "successCriteria": "Any feature with children shows a collapse toggle; clicking it hides the entire sub-tree with a hidden-count badge, and clicking again restores them.",
+  "domain": "ux",
+  "implementation": "Collapse state is a Set<string> of collapsed featureKeys in App component state, initialised as an empty Set so the tree starts fully expanded on load. visibleTree walks the full tree and omits nodes whose ancestor is in collapsedKeys. The collapse toggle lives in .collapse-toggle (position: absolute; left: -28px) to the left of the card and appears on any FeatureCard with descendantCount > 0. Expand-all clears collapsedKeys to a new Set(); collapse-all populates collapsedKeys with every featureKey that has children, using allFeatures.filter(f => (f.lineage?.children ?? []).length > 0).",
+  "priority": 1,
+  "statusHistory": [
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "implementation field says tree starts fully collapsed but App.tsx initialises collapsedKeys with new Set() (empty — starts fully expanded). This was an intentional revision noted in the code comment: '// Start fully expanded (feat-2026-016 revised: collapsed state was confusing)'"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1774194647853",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "implementation field says tree starts fully collapsed but App.tsx initialises collapsedKeys with new Set() (empty — starts fully expanded). This was an intentional revision noted in the code comment: '// Start fully expanded (feat-2026-016 revised: collapsed state was confusing)'"
+    },
+    {
+      "id": "stale-1774194647854",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    }
+  ],
+  "revisions": [
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "implementation"
+      ],
+      "reason": "Previous implementation said tree starts fully collapsed; App.tsx initialises collapsedKeys with new Set() (empty = fully expanded). Code comment explicitly notes: 'Start fully expanded (feat-2026-016 revised: collapsed state was confusing)'. Also clarified expand-all / collapse-all behaviour which was missing."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "featureKey": "feat-2026-013",
+  "title": "lifeascode — Web App",
+  "status": "frozen",
+  "problem": "Teams need a shared dashboard to browse features and view lineage without installing anything locally — the CLI alone doesn't serve non-engineering stakeholders.",
+  "schemaVersion": 1,
+  "analysis": "The web-based LAC dashboard — a Next.js 16 app with Supabase as the database, tRPC for type-safe API calls, and Drizzle ORM for queries. Where the CLI operates on local files, the web app persists features to a database accessible to anyone on the team. Deployed on Vercel.",
+  "implementation": "apps/nextjs/ is the Next.js App Router application. The tRPC router in packages/api/src/routers/ exposes procedures for features, search, admin, events, and GitHub integration. packages/db/ contains Drizzle schema and migrations pointing at Supabase Postgres. packages/ui/ is a shared React component library (Tailwind + CVA + Base UI + Lucide). Next.js tag-based cache revalidation is used after mutations.",
+  "decisions": [
+    {"decision": "tRPC for the API layer","rationale": "End-to-end type safety between the Next.js frontend and API package — types flow from router definition to React component with no codegen step.","alternativesConsidered": ["REST + OpenAPI — requires codegen and loses type inference","GraphQL — more flexible but heavyweight for this use case"],"date": "2026-03-21"},
+    {"decision": "Supabase Postgres + Drizzle ORM","rationale": "Supabase provides managed Postgres with realtime subscriptions; Drizzle gives type-safe queries without Prisma's cold-start overhead.","alternativesConsidered": ["SQLite (local-only) — no multi-user access","Prisma — heavier, slower cold starts on Vercel edge"],"date": "2026-03-21"},
+    {"decision": "Separate packages for api, db, ui, auth within the monorepo","rationale": "Clear separation of concerns — the API package can be tested independently and the UI library reused across multiple apps.","alternativesConsidered": ["Everything in apps/nextjs — faster to start but unmaintainable"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "Features in the database and features in git can desync — two separate sources of truth",
+    "Requires Supabase credentials and Vercel deployment — more infrastructure than the local CLI",
+    "tRPC cache revalidation must be manually maintained per mutation — easy to forget"
+  ],
+  "successCriteria": "The app deploys to Vercel, connects to Supabase, and displays all features with working search, lineage view, and detail pages returning type-safe responses.",
+  "tags": ["nextjs","supabase","trpc","drizzle","vercel","web"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "The web app is the team-facing LAC surface — where the CLI is for individuals, this is for everyone else."},
+  "domain": "web-app",
+  "priority": 2
+}

@@ -1,0 +1,24 @@
+{
+  "featureKey": "feat-2026-007",
+  "title": "@majeanson/lac — The CLI",
+  "status": "frozen",
+  "problem": "Developers need a terminal-first way to create, search, validate, and manage feature.json files without leaving their workflow.",
+  "schemaVersion": 1,
+  "analysis": "The public entry point to the LAC ecosystem — a single npm package (@majeanson/lac) bundling three binaries: `lac` (CLI), `lac-lsp` (language server), and `lac-mcp` (MCP server). 16+ commands cover the full lifecycle; all operate on the local filesystem with no server required.",
+  "implementation": "Entry point is src/index.ts, a Commander.js router delegating to src/commands/*.ts. The filesystem walker and scanner power all read commands. Config is loaded from .lac/config.json; interactive commands use the `prompts` library. Static site export generates self-contained HTML/CSS from src/templates/. Bundled with tsdown to ESM.",
+  "decisions": [
+    {"decision": "Bundle all three binaries (CLI, LSP, MCP) into one npm package","rationale": "One `npm install -g @majeanson/lac` gives the developer everything — no separate install steps for server components.","alternativesConsidered": ["Separate packages per binary — cleaner separation but friction-heavy install"],"date": "2026-03-21"},
+    {"decision": "Commander.js for CLI parsing","rationale": "Mature, well-documented, and supports nested subcommands cleanly for 16+ commands.","alternativesConsidered": ["Yargs — more config, less ergonomic","Bun.argv parsing — too low-level"],"date": "2026-03-21"},
+    {"decision": "File-system only, no database","rationale": "Features live in the repo alongside code and git tracks history — no infra to provision or maintain.","alternativesConsidered": ["SQLite sidecar — faster queries but severs git-native workflow"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "Bundling all binaries means CLI-only users always install LSP and MCP too",
+    "Interactive prompts require a real TTY — headless CI needs --yes flags",
+    "No concurrent write safety — simultaneous lac fill calls on the same file conflict"
+  ],
+  "successCriteria": "`npm install -g @majeanson/lac` succeeds and `lac init` creates a valid .lac/ workspace with all commands running error-free.",
+  "tags": ["cli","npm","commander","bun","public"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "The ecosystem overview needs a dedicated feature per package; the CLI is the primary user-facing entry point."},
+  "domain": "cli",
+  "priority": 1
+}

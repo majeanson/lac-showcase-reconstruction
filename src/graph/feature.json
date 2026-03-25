@@ -1,0 +1,155 @@
+{
+  "featureKey": "feat-2026-021",
+  "title": "Obsidian-style Graph View",
+  "status": "frozen",
+  "problem": "The tree view shows lineage as an indented list but hides the topology — readers cannot see which features are densely connected, isolated, or form clusters.",
+  "analysis": "D3 force simulation positions nodes by repulsion + spring forces along parent/child edges. The graph shares the app's existing focusKey/focus state so both views stay in sync. Node size (5–14px) encodes completeness_pct. Two colour modes driven by a colorBy prop: 'status' maps to warm palette constants (STATUS_NODE_COLOR); 'domain' maps 14 known domains to evenly-spaced HSL hues and adds forceX/Y cluster forces that pull nodes toward pre-computed domain centres on a circle at 28% of canvas radius, with SVG cluster labels. Hover shows a floating tooltip (title + featureKey). Click calls onFocus to set the app-level focusKey; Ctrl+click calls onNodeJump to switch to tree view. The graph receives filteredFeatures from App so filter state is honoured in graph view. The simulation is fully rebuilt on each render triggered by [features, focusKey, colorBy] dependency changes.",
+  "decisions": [
+    {
+      "decision": "Reuse the existing focusKey state rather than a separate graph-selection concept",
+      "rationale": "The app already has a working focus mechanism with URL sync and breadcrumb — sharing it means clicking a graph node and switching to tree view highlights the same feature.",
+      "alternativesConsidered": [
+        "Separate selectedKey for graph — would duplicate URL param and breadcrumb logic"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Dark warm background for the graph canvas (#1C1714)",
+      "rationale": "The Obsidian graph idiom reads best on dark background — using the --text colour preserves the archival palette rather than reaching for a generic dark.",
+      "alternativesConsidered": [
+        "Light cream background — nodes washed out and edges invisible",
+        "Pure black — breaks the warm aesthetic"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "View toggle (tree / graph) in the section header, not a separate route",
+      "rationale": "The app has no router — a toggle button is the minimal change; restructuring the app for one mode switch is not warranted.",
+      "date": "2026-03-21"
+    }
+  ],
+  "tags": [
+    "graph",
+    "d3",
+    "lineage",
+    "visualisation",
+    "obsidian",
+    "force-directed"
+  ],
+  "lineage": {
+    "parent": "feat-2026-005",
+    "spawnReason": "The tree view established collapsible lineage threads; the graph shows full topology at a glance."
+  },
+  "implementation": "FeatureGraph.tsx uses D3 force simulation (forceLink + forceManyBody + forceCenter + forceCollide) rendered into an SVG inside a .graph-container div. Nodes sized 5–14px by completenessOf(f) — computed at render time from optional-field coverage (analysis, implementation, decisions, successCriteria, knownLimitations, tags, domain). colorBy prop ('status' | 'domain') drives node colour: status mode uses STATUS_NODE_COLOR warm palette constants; domain mode maps 14 known domains to evenly-spaced HSL hues via domainColor() helper. When colorBy=domain, cluster forces (forceX/Y strength=0.18) pull nodes toward pre-computed domain centre positions arranged on a circle at 28% of canvas radius; cluster labels render in a dedicated SVG layer. Hover shows a transient floating tooltip (title + featureKey) that hides on mouseout and highlights adjacent edges. Click calls onFocus(featureKey) to update the app-level focus state (no pinned panel). Ctrl+click calls onNodeJump(featureKey) which switches the app to tree view. The entire simulation is rebuilt inside a useEffect with dependency array [features, focusKey, colorBy] — no simulationRef or zoomRef persistence across renders. Zoom is handled by d3.zoom on the SVG element scoped to each render. The graph receives filteredFeatures from App so filter/search state is reflected in graph view.",
+  "successCriteria": "Graph toggle shows a force-directed graph where: nodes are sized by completeness, draggable, and highlight adjacent edges on hover; clicking a node calls onFocus to sync the focused state; colorBy toggle switches between status palette and domain-clustered palette with cluster labels; Ctrl+click opens the node in tree view; the graph respects active filter state; a hover tooltip shows node title and key.",
+  "domain": "ux",
+  "schemaVersion": 1,
+  "knownLimitations": [
+    "No ResizeObserver — graph doesn't reflow on window resize without page reload",
+    "features.find() is O(n) per D3 hover event — should be a pre-built Map for performance at scale",
+    "Simulation is fully rebuilt on every [features, focusKey, colorBy] change — switching colorBy or focus restarts the layout animation",
+    "Cluster centre positions are computed once at simulation build time; adding/removing domains requires a rebuild"
+  ],
+  "priority": 2,
+  "statusHistory": [
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "Graph view significantly enhanced: domain coloring (colorBy prop, cluster forces, cluster labels), pinned tooltip panel showing problem text, Ctrl+click to jump to tree view (onNodeJump), centerOnNode pan/zoom on click, faster simulation (alphaDecay=0.08), filter integration (graph now shows filteredFeatures), domain legend, resolved knownLimitation about completeness_pct"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "Multiple drifts: (1) click pins info panel — NOT in code, click just calls onFocus; (2) simulationRef/zoomRef persist across renders — NOT in code, useEffect fully rebuilds on [features, focusKey, colorBy] change; (3) centerOnNode pan/zoom animation — NOT in code; (4) STATUS_GLOW constants — NOT in code; (5) tooltip shows only title+featureKey, not problem text."
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "knownLimitations[2] says 'Pinned panel position is fixed relative to click coordinates' — no pinned panel exists in code"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1774192068294",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "Graph view significantly enhanced: domain coloring (colorBy prop, cluster forces, cluster labels), pinned tooltip panel showing problem text, Ctrl+click to jump to tree view (onNodeJump), centerOnNode pan/zoom on click, faster simulation (alphaDecay=0.08), filter integration (graph now shows filteredFeatures), domain legend, resolved knownLimitation about completeness_pct"
+    },
+    {
+      "id": "reopen-1774194654681",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "Multiple drifts: (1) click pins info panel — NOT in code, click just calls onFocus; (2) simulationRef/zoomRef persist across renders — NOT in code, useEffect fully rebuilds on [features, focusKey, colorBy] change; (3) centerOnNode pan/zoom animation — NOT in code; (4) STATUS_GLOW constants — NOT in code; (5) tooltip shows only title+featureKey, not problem text."
+    },
+    {
+      "id": "stale-1774194654682",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    },
+    {
+      "id": "reopen-1774194813330",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "knownLimitations[2] says 'Pinned panel position is fixed relative to click coordinates' — no pinned panel exists in code"
+    },
+    {
+      "id": "stale-1774194813331",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    }
+  ],
+  "revisions": [
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Graph view substantially enhanced: domain coloring, cluster forces/labels, pinned panel, onNodeJump, centerOnNode, filter integration, faster simulation. Removed resolved knownLimitation about completeness_pct."
+    },
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "analysis"
+      ],
+      "reason": "Analysis was never updated after reopen — it still described the original minimal graph. Updated to reflect domain coloring, colorBy prop, cluster forces/labels, pinned panel, Ctrl+click jump, centerOnNode, and filter integration. Also removed the stale-review annotation since all stale fields are now resolved."
+    },
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Corrected three fields. (1) Analysis: removed 'click pins a full info panel' — click just calls onFocus, no panel exists. (2) Implementation: removed simulationRef/zoomRef persistence (simulation rebuilt on every dependency change), removed centerOnNode/pendingCenterRef/700ms-timeout (none exist), removed STATUS_GLOW constants (only STATUS_NODE_COLOR exists), removed pinned info panel showing problem text (tooltip shows title+featureKey only and is transient). (3) successCriteria: removed 'clicking a node pins an info panel and pans the graph to centre on it' — click updates focus state only."
+    }
+  ]
+}

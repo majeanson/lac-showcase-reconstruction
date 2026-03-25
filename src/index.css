@@ -1,0 +1,91 @@
+/* feat-2026-003: Visual Design System — warm archival aesthetic */
+/* All design tokens on :root — single source of truth */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Core palette */
+  --bg: #F2EDE3;
+  --bg-secondary: #EAE3D6;
+  --bg-card: #FAF7F2;
+  --text: #1C1714;
+  --text-muted: #6B5E54;
+  --text-faint: #9A8C82;
+  --accent: #7C3217;
+  --accent-light: #A84B25;
+  --border: #D4C8BC;
+  --border-light: #E5DDD5;
+
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Status colours — text + background pairs (feat-2026-003) */
+  --status-draft: #7A6200;
+  --status-draft-bg: #FFF9E0;
+  --status-active: #1A5C2A;
+  --status-active-bg: #E4F5E8;
+  --status-frozen: #1A3A6C;
+  --status-frozen-bg: #E3ECFC;
+  --status-deprecated: #5C1A1A;
+  --status-deprecated-bg: #FCEAEA;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* Completeness badge tiers (feat-2026-029) */
+  --completeness-high: #1A5C2A;
+  --completeness-high-bg: #E4F5E8;
+  --completeness-mid: #7A5300;
+  --completeness-mid-bg: #FFF3D6;
+  --completeness-low: #7C1C1C;
+  --completeness-low-bg: #FCEAEA;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}

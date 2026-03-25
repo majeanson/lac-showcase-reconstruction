@@ -1,0 +1,24 @@
+{
+  "featureKey": "feat-2026-010",
+  "title": "lac-lsp — Language Server",
+  "status": "frozen",
+  "problem": "Without a language server, every client re-walks the repo independently on each request, leading to duplicate work and stale data.",
+  "schemaVersion": 1,
+  "analysis": "A dual-protocol server — LSP over stdio for editor clients and a REST + SSE HTTP API on localhost:7474 for browser, CI, and web app clients. Maintains an in-memory feature index kept live via chokidar file watching, shared across both protocols from a single process.",
+  "implementation": "LacLspServer.ts wires together the LSP connection, the HTTP server, and FeatureIndex. FeatureIndex.ts maintains an in-memory map rebuilt on start and patched on chokidar file change events. LSP handlers implement codeLens, hover, diagnostics, definition, and workspace symbols. HttpServer.ts registers REST routes and the SSE /events endpoint. Mode selected via CLI args at startup.",
+  "decisions": [
+    {"decision": "Dual-protocol: LSP stdio + HTTP on :7474","rationale": "Editor clients speak LSP; browser and CI clients speak HTTP — running both from one process shares the same index and file watcher.","alternativesConsidered": ["LSP only — excludes non-editor clients","HTTP only — misses deep editor integration"],"date": "2026-03-21"},
+    {"decision": "In-memory index with chokidar file watching","rationale": "Feature sets are small enough for in-memory sub-millisecond queries; file watching keeps the index live without polling.","alternativesConsidered": ["SQLite — persistent but adds migration complexity","No index, always scan — too slow for frequent editor requests"],"date": "2026-03-21"},
+    {"decision": "SSE for real-time updates over WebSockets","rationale": "SSE is unidirectional, simpler to implement and proxy — the use case is inherently server-to-client broadcast.","alternativesConsidered": ["WebSockets — bidirectional, more complex, not needed here"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "In-memory index lost on crash — all clients must handle reconnection",
+    "HTTP CORS allows wildcard origin — security risk on shared networks",
+    "SSE late subscribers miss all prior events — no event replay"
+  ],
+  "successCriteria": "`lac-lsp --http-only --workspace /path/to/repo` starts, responds to GET /health with a feature count, and GET /features returns all feature.json files found.",
+  "tags": ["lsp","http","server","indexer","sse"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "The language server is the shared index powering both the VS Code extension and the web app."},
+  "domain": "server",
+  "priority": 5
+}

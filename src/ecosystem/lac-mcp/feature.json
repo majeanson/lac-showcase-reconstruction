@@ -1,0 +1,23 @@
+{
+  "featureKey": "feat-2026-009",
+  "title": "lac-mcp — MCP Server",
+  "status": "frozen",
+  "problem": "Without an MCP server, Claude can only read files pasted into the conversation — it can't search features, create new ones, or write fields back to disk.",
+  "schemaVersion": 1,
+  "analysis": "An MCP server exposing LAC as structured tools for Claude and any MCP-compatible AI client. The read_feature_context + write_feature_fields pair implements a deliberate split: Claude reads context and generates values itself, then writes them back — keeping the AI in the loop without a redundant API call.",
+  "implementation": "Single file (src/index.ts) registering MCP tools via the MCP SDK over stdio JSON-RPC. Each handler walks the filesystem for feature.json files and delegates AI-heavy operations to lac-claude. All writes use skipConfirm: true. Bundled into the @majeanson/lac binary as the lac-mcp binary.",
+  "decisions": [
+    {"decision": "read_feature_context + write_feature_fields as a two-step pattern instead of fill_feature","rationale": "When Claude Code is the client, Claude itself is the AI — the split lets Claude read context, generate field values, and write them back without a redundant Anthropic API call.","alternativesConsidered": ["Single fill tool — can't leverage Claude-as-client without a redundant API call"],"date": "2026-03-21"},
+    {"decision": "skipConfirm: true for all MCP writes","rationale": "Showing a confirmation prompt in the terminal would block the MCP client — AI tools are expected to be deterministic enough not to need per-write approval.","alternativesConsidered": ["Interactive confirmation — breaks headless MCP workflow","Dry-run mode — useful addition but not yet implemented"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "No concurrency controls — simultaneous sessions writing the same feature.json will conflict",
+    "skipConfirm means bad AI-generated values are written to disk without human review",
+    "No streaming — full response buffered before returning to MCP client"
+  ],
+  "successCriteria": "Claude Code with the MCP server configured can search, create, read, fill, and write feature.json files in a workspace without any manual file editing.",
+  "tags": ["mcp","ai","claude","tools","protocol"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "The MCP server is how Claude participates in the LAC workflow as a first-class surface."},
+  "domain": "ai-integration",
+  "priority": 5
+}

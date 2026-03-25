@@ -1,0 +1,134 @@
+{
+  "featureKey": "feat-2026-020",
+  "title": "Focus mode: children inherit focused state",
+  "status": "frozen",
+  "problem": "When a feature is focused, its direct children appeared grey (55% opacity) instead of fully visible, making it harder to read the focused thread.",
+  "schemaVersion": 1,
+  "analysis": "In focus mode, the app assigns four states to each card: 'focused' (full opacity), 'context' (55%), 'dimmed' (22%), or 'normal'. Previously, both ancestors and direct children got 'context' — both appeared grey. Direct children form the immediate thread and should render at full opacity alongside the focused parent.",
+  "implementation": "Uses a single focusContextKeys useMemo (not split memos) that builds a Set containing: focusKey itself, all its ancestors via getAncestors(), and direct children from focused?.lineage?.children ?? []. The getFocusState function returns 'focused' only for the focusKey, 'context' for every other key in focusContextKeys (ancestors + direct children), and 'dimmed' for everything else. Since App.css only defines .is-dimmed{opacity:0.45} and has no style for 'context' or 'focused' states, both 'focused' and 'context' cards render at full opacity — making direct children visually indistinguishable from the focused card. The 'context' vs 'focused' distinction is semantic (the focus button shows card-action--active only on the focusKey card) but not visually distinct via opacity. Only nodes not in focusContextKeys receive .is-dimmed.",
+  "tags": [
+    "focus-mode",
+    "ux",
+    "feature-tree"
+  ],
+  "lineage": {
+    "parent": "feat-2026-016",
+    "spawnReason": "feat-2026-016 noted ancestors and children shared context opacity — this promotes children to full opacity."
+  },
+  "decisions": [
+    {
+      "decision": "Keep a single focusContextKeys Set rather than splitting into separate ancestor and child sets",
+      "rationale": "The single-set approach is simpler and achieves the same visual outcome: both ancestors and direct children end up in 'context' state, which App.css renders at full opacity (no .is-dimmed class). The semantic difference between 'context' and 'focused' is used only for the focus button active style, not for opacity.",
+      "alternativesConsidered": [
+        "Split into focusAncestorKeys + focusChildKeys with children promoted to 'focused' — adds memo complexity without a visible opacity benefit since there is no CSS class for either 'focused' or 'context'"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Children get 'context' focusState (same as ancestors), not a separate 'focused' or 'child' state",
+      "rationale": "Since App.css has no CSS rule for 'context' state, both 'context' and 'focused' render at full opacity — children are visually indistinguishable from the focused card, which achieves the goal without introducing a new CSS class.",
+      "alternativesConsidered": [
+        "Promote children to 'focused' state — same visual result, but would require a code path change and the 'focused' state already carries the semantics of the clicked card"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Only direct children from lineage.children are non-dimmed — grandchildren and deeper remain dimmed",
+      "rationale": "Promoting the full subtree would fill the viewport with full-opacity cards, defeating focus mode's purpose — exploring deeper descendants requires a separate focus click.",
+      "alternativesConsidered": [
+        "Promote all descendants via BFS — too much noise, collapses the focused/context distinction for deep trees"
+      ],
+      "date": "2026-03-21"
+    }
+  ],
+  "knownLimitations": [
+    "Only direct children from lineage.children are promoted to non-dimmed state — grandchildren and deeper descendants are dimmed",
+    "Ancestors and direct children are indistinguishable visually (both render at full opacity via 'context' state with no CSS class)",
+    "No keyboard shortcut to jump focus to a child feature"
+  ],
+  "successCriteria": "When a feature is focused, its direct children (from lineage.children) and all ancestors appear at full opacity alongside the focused card, while all other features dim to 0.45 opacity. The focused card's '⊙ focus' button shows as active; ancestor and child cards do not.",
+  "domain": "ux",
+  "priority": 3,
+  "revisions": [
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Code promotes ALL descendants (BFS via focusDescendantKeys), not just direct children as previously documented. Variable is focusDescendantKeys, not focusChildKeys. KnownLimitations and successCriteria updated to match actual behavior."
+    },
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Corrected three fields. (1) Implementation: previous revision incorrectly described split memos and BFS focusDescendantKeys — actual code uses single focusContextKeys Set with lineage.children (direct only, not BFS), children get 'context' not 'focused', and there is no CSS distinction between 'context' and 'focused'. (2) successCriteria: 'entire descendant subtree' corrected to 'direct children (from lineage.children)'. (3) knownLimitations: removed false claim about 'All descendants render at full focused opacity'; added accurate limitation that only direct children are non-dimmed."
+    },
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Decisions 1 and 2 still described split memos and promoting children to 'focused' state — neither is in the code. Rewrote: decision 1 documents the single-Set choice; decision 2 documents why 'context' state (not 'focused') is used for children and why it achieves the same visual result."
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "implementation claims split memos (focusAncestorKeys + focusDescendantKeys via BFS). Actual code uses a single focusContextKeys Set containing focusKey+ancestors+directChildren (from lineage.children). Children get 'context' state (not 'focused'). successCriteria and knownLimitations reference 'entire descendant subtree' and 'BFS focusDescendantKeys' which do not exist."
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "decisions[0] and decisions[1] still describe split memos and promoting children to 'focused' state — actual code uses single focusContextKeys with children getting 'context' state"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1774194653147",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "implementation claims split memos (focusAncestorKeys + focusDescendantKeys via BFS). Actual code uses a single focusContextKeys Set containing focusKey+ancestors+directChildren (from lineage.children). Children get 'context' state (not 'focused'). successCriteria and knownLimitations reference 'entire descendant subtree' and 'BFS focusDescendantKeys' which do not exist."
+    },
+    {
+      "id": "stale-1774194653148",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    },
+    {
+      "id": "reopen-1774194812710",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "decisions[0] and decisions[1] still describe split memos and promoting children to 'focused' state — actual code uses single focusContextKeys with children getting 'context' state"
+    },
+    {
+      "id": "stale-1774194812711",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    }
+  ]
+}

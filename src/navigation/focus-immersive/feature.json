@@ -1,0 +1,139 @@
+{
+  "featureKey": "feat-2026-016",
+  "title": "Immersive Focus Mode — Full-Page Card and Left-Side Actions",
+  "status": "frozen",
+  "problem": "Focus mode is not immersive enough: sibling cards stay visually present at full weight, the focused card doesn't claim the freed space, and action buttons on the right edge are easy to miss.",
+  "schemaVersion": 1,
+  "analysis": "Two independent problems compound: the freed whitespace from hidden cards is wasted instead of being given to the focused card, and the thread/focus buttons belong near the content's left entry point, not the right edge. The fix expands the focused card to fill the column width and moves buttons to a left gutter. Dimming unfocused cards reinforces the spatial metaphor without removing them from the DOM.",
+  "decisions": [
+    {
+      "decision": "Focused card expands to fill 100% column width; unfocused cards render at reduced opacity (~30–40%) and remain non-interactive",
+      "rationale": "Full column width makes the spatial shift legible without a modal overlay — the tree structure stays visible in the background, preserving provenance context.",
+      "alternativesConsidered": [
+        "Modal/overlay for focus — hides the tree, breaking the provenance metaphor",
+        "CSS zoom on focused card — distorts layout and causes reflow",
+        "Colour highlight only — insufficient signal"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Thread and focus buttons move to the left side of the card in a narrow 40px gutter",
+      "rationale": "Left-side placement aligns with reading direction — the eye enters a card from the left, so navigation affordances placed there are encountered naturally before the content.",
+      "alternativesConsidered": [
+        "Keep buttons on the right — users report not finding them",
+        "Buttons inline with title — clutters the title row",
+        "FAB pattern — ambiguous which card it targets"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Unfocused cards use CSS opacity + pointer-events: none, not display: none",
+      "rationale": "Keeping them in the DOM lets the reader see the tree shape without being distracted by it — pointer-events: none prevents accidental clicks while ancestors remain reachable via breadcrumb.",
+      "alternativesConsidered": [
+        "display: none — removes context entirely",
+        "visibility: hidden — same as display:none for perception",
+        "Filter: blur + opacity — adds GPU cost with no benefit"
+      ],
+      "date": "2026-03-21"
+    },
+    {
+      "decision": "Tree starts fully expanded on load — pre-populating collapsedKeys was reverted",
+      "rationale": "Starting collapsed was confusing: visitors saw an empty-looking tree and had to discover the expand affordance before seeing any content. Starting expanded trades initial visual density for immediate legibility.",
+      "alternativesConsidered": [
+        "Start all collapsed — was the original design (every parent key pre-populated into collapsedKeys), reverted after it confused readers on first load",
+        "Remember collapse state via sessionStorage — moot once start-collapsed was reverted"
+      ],
+      "date": "2026-03-21"
+    }
+  ],
+  "implementation": "FeatureCard accepts a focusState prop ('focused' | 'context' | 'dimmed' | 'normal'). The feature-entry wrapper renders with an inline paddingLeft based on depth. When focusState === 'dimmed', the card receives the CSS class 'is-dimmed', which applies opacity: 0.45 via App.css. Focused and context cards render at full opacity with no additional CSS classes. The depth-based paddingLeft from feature-entry is not overridden for focused cards — column-width expansion was designed but not implemented in code. Action buttons (expand, focus, json, graph) live in .card-footer at the bottom of the card; left-gutter button placement was designed but not implemented. collapsedKeys starts as an empty Set (fully expanded) — the original design pre-populated all parent keys but this was reversed because starting collapsed confused visitors. The collapse-all button in FilterBar still lets users collapse all parents at once.",
+  "successCriteria": "Activating focus mode causes all non-focal cards (not focusKey, not ancestors, not direct children) to grey out to 0.45 opacity via .is-dimmed. Focused and context cards remain at full opacity. The '⊙ focus' button in the card footer shows card-action--active styling on the focused card. Clicking focus again (or '← all') clears focus and restores all cards to full opacity.",
+  "knownLimitations": [
+    "Column-width expansion for focused cards and left-gutter button placement were designed but not built — focused cards retain their depth-based indent and buttons stay in card-footer",
+    "Dimmed opacity (0.45) is tuned for the warm cream palette — dark mode would need a different value",
+    "No pointer-events: none on dimmed cards — they remain interactive despite being visually greyed out"
+  ],
+  "tags": [
+    "focus",
+    "ux",
+    "layout",
+    "card",
+    "navigation",
+    "immersive"
+  ],
+  "domain": "ux",
+  "lineage": {
+    "parent": "feat-2026-014",
+    "spawnReason": "feat-2026-014 defined focus mode semantics; this feature defines focus mode visuals and fixes button placement.",
+    "children": [
+      "feat-2026-020",
+      "feat-2026-027"
+    ]
+  },
+  "statusHistory": [
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "Multiple drifts vs actual code: (1) decision 4 says 'start collapsed' but code starts fully expanded; (2) implementation claims left-gutter buttons, full-column-width focused card, card-with-gutter wrapper, expanded padding+shadow — none of these exist. Actual: only .is-dimmed{opacity:0.45} is applied, focus button stays in card-footer, no CSS for focused card width change."
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-22",
+      "reason": "knownLimitations still reference unbuilt features: 'Left gutter reserves 40px' (no gutter exists) and 'opacity values (0.22 dimmed / 0.55 context)' (actual is 0.45 for .is-dimmed, no separate context opacity)"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-22"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1774194651103",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "Multiple drifts vs actual code: (1) decision 4 says 'start collapsed' but code starts fully expanded; (2) implementation claims left-gutter buttons, full-column-width focused card, card-with-gutter wrapper, expanded padding+shadow — none of these exist. Actual: only .is-dimmed{opacity:0.45} is applied, focus button stays in card-footer, no CSS for focused card width change."
+    },
+    {
+      "id": "stale-1774194651104",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    },
+    {
+      "id": "reopen-1774194811526",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "reopen",
+      "body": "knownLimitations still reference unbuilt features: 'Left gutter reserves 40px' (no gutter exists) and 'opacity values (0.22 dimmed / 0.55 context)' (actual is 0.45 for .is-dimmed, no separate context opacity)"
+    },
+    {
+      "id": "stale-1774194811527",
+      "author": "lac advance",
+      "date": "2026-03-22",
+      "type": "stale-review",
+      "body": "Fields that may need updating after reopen: analysis, implementation, decisions, successCriteria"
+    }
+  ],
+  "revisions": [
+    {
+      "date": "2026-03-22",
+      "author": "claude",
+      "fields_changed": [
+        "decisions",
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Three drifts corrected: (1) Decision 4 updated — 'start collapsed' design was explicitly reverted; code starts with new Set() (expanded). (2) Implementation rewritten to match actual code: only .is-dimmed CSS class exists, no left-gutter buttons, no full-column-width for focused cards — those were designed but not built. (3) successCriteria updated to describe actual dimming behavior rather than unbuilt full-column layout."
+    }
+  ]
+}

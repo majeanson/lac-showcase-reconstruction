@@ -1,0 +1,24 @@
+{
+  "featureKey": "feat-2026-011",
+  "title": "lac-claude — Claude Bridge",
+  "status": "frozen",
+  "problem": "Without a programmatic Claude integration, every AI-assisted fill requires manually copying context into a chat window and pasting results back.",
+  "schemaVersion": 1,
+  "analysis": "A private bridge library connecting feature.json files to the Anthropic API. Given a feature folder, it reads surrounding source files (~200KB max), builds a structured markdown context, and fills missing fields or generates code artifacts. Exposes fillFeature() and genFromFeature(), used internally by both the CLI and the MCP server.",
+  "implementation": "src/index.ts exports fillFeature() and genFromFeature(). context-builder.ts reads TypeScript, JavaScript, Python, and other source files adjacent to the feature.json. prompts.ts defines per-field system/user prompts for each fillable field. The Anthropic SDK client defaults to claude-sonnet-4-6. Structured field responses are parsed after stripping markdown code fences.",
+  "decisions": [
+    {"decision": "Per-field prompts rather than one prompt for all missing fields","rationale": "Each field has a distinct shape and purpose — separate prompts produce higher-quality results than a single omnibus prompt.","alternativesConsidered": ["One prompt, all fields — faster but lower quality, harder to parse structured fields"],"date": "2026-03-21"},
+    {"decision": "Read surrounding source files for context, not just feature.json","rationale": "The best analysis and implementation notes come from reading the actual code — Claude can infer decisions and limitations from the source.","alternativesConsidered": ["feature.json only — Claude would hallucinate plausible-sounding but inaccurate details"],"date": "2026-03-21"},
+    {"decision": "Claude Sonnet 4.6 as default model","rationale": "Best balance of capability and cost for the fill task, with a context window large enough for a typical feature folder.","alternativesConsidered": ["Opus — more capable but 5x more expensive","Haiku — lower quality for nuanced analysis fields"],"date": "2026-03-21"}
+  ],
+  "knownLimitations": [
+    "No caching — every fill re-reads all source files and makes a fresh API call",
+    "Context truncation at ~200KB may lose relevant source files in large folders",
+    "Prompt strings are hardcoded — no per-workspace customization"
+  ],
+  "successCriteria": "Running lac fill on a feature with missing fields produces accurate, non-hallucinated values for analysis, implementation, and knownLimitations that reflect the actual source code.",
+  "tags": ["claude","ai","fill","anthropic","generation"],
+  "lineage": {"parent": "feat-2026-006","spawnReason": "AI-assisted field filling is a core LAC value proposition — this package makes it possible programmatically."},
+  "domain": "ai-integration",
+  "priority": 4
+}
